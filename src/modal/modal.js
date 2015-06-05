@@ -303,10 +303,24 @@ angular.module('ui.bootstrap.modal', [])
           angularDomEl.attr('modal-animation', 'true');
         }
 
+        var hasParent = modal.futureParentEl && modal.futureParentEl.append;
+
+        if (hasParent) {
+            modal.futureParentEl.append(angularDomEl);
+        }
+
         var modalDomEl = $compile(angularDomEl)(modal.scope);
         openedWindows.top().value.modalDomEl = modalDomEl;
         openedWindows.top().value.modalOpener = modalOpener;
-        body.append(modalDomEl);
+
+        if (hasParent) {
+            //defer adding to body in order to ensure that the element is compiled completely in the parent. Required directive controllers will be found in the hierarchy of the parentElement
+            $timeout(function () {
+                body.append(modalDomEl);
+            });
+        } else {
+            body.append(modalDomEl);
+        }
         body.addClass(OPENED_MODAL_CLASS);
       };
 
@@ -445,6 +459,7 @@ angular.module('ui.bootstrap.modal', [])
                 deferred: modalResultDeferred,
                 renderDeferred: modalRenderDeferred,
                 content: tplAndVars[0],
+                futureParentEl: modalOptions.futureParentEl,
                 animation: modalOptions.animation,
                 backdrop: modalOptions.backdrop,
                 keyboard: modalOptions.keyboard,
